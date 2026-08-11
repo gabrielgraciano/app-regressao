@@ -1,7 +1,13 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { scaleLinear } from 'd3-scale'
 import { Panel } from '../../components/Panel'
 import { num } from '../../lib/format'
+import {
+  ajustaDominio,
+  comFolga,
+  extento,
+  type Intervalo,
+} from '../../lib/escala'
 import type { EmvAction, EmvDerivado, EmvState } from './useEmvState'
 
 const W = 660
@@ -23,29 +29,48 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
   const { b0, b1 } = estado.candidato
   const p = estado.params
 
-  const { ex, ey } = useMemo(() => {
-    const xs = amostra.x
-    const ys = amostra.y
-    const x0 = Math.min(...xs)
-    const x1 = Math.max(...xs)
-    const folgaX = (x1 - x0) * 0.05 || 1
-    let y0 = Math.min(...ys)
-    let y1 = Math.max(...ys)
-    const folgaY = (y1 - y0) * 0.12 || 1
-    y0 -= folgaY
-    y1 += folgaY
-    return {
-      ex: scaleLinear()
-        .domain([x0 - folgaX, x1 + folgaX])
-        .range([M.left, W - M.right]),
-      ey: scaleLinear()
-        .domain([y0, y1])
-        .range([H - M.bottom, M.top]),
-    }
+  // x = 0 sempre no domínio: é lá que se lê o intercepto.
+  const dominioX = useMemo<Intervalo>(() => {
+    const [x0, x1] = extento([0, ...amostra.x])
+    const folga = (x1 - x0) * 0.05 || 1
+    return [x0 - folga, x1 + folga]
   }, [amostra])
 
-  const dominioX = ex.domain()
-  const dominioY = ey.domain()
+  /** O que precisa caber na vertical: os dados e as três retas. */
+  const necessarioY = useMemo<Intervalo>(() => {
+    const vals = [...amostra.y]
+    for (const [i0, i1] of [
+      [b0, b1],
+      [p.beta0, p.beta1],
+      [emv.b0, emv.b1],
+    ]) {
+      vals.push(i0 + i1 * dominioX[0], i0 + i1 * dominioX[1])
+    }
+    return extento(vals)
+  }, [amostra, b0, b1, p.beta0, p.beta1, emv, dominioX])
+
+  /**
+   * Domínio vertical pegajoso. Recalculá-lo a partir dos yᵢ faria o eixo
+   * deslizar junto com os dados quando β₀ muda — e o deslocamento da reta,
+   * que é o efeito a ser observado, ficaria invisível.
+   */
+  const [dominioY, setDominioY] = useState<Intervalo>(() =>
+    comFolga(necessarioY),
+  )
+  useEffect(() => {
+    setDominioY((atual) => ajustaDominio(atual, necessarioY))
+  }, [necessarioY])
+
+  const ex = useMemo(
+    () => scaleLinear().domain(dominioX).range([M.left, W - M.right]),
+    [dominioX],
+  )
+  const ey = useMemo(
+    () => scaleLinear().domain(dominioY).range([H - M.bottom, M.top]),
+    [dominioY],
+  )
+
+  const zeroVisivel = dominioX[0] <= 0 && dominioX[1] >= 0
 
   /** Converte coordenadas do ponteiro para o sistema do gráfico. */
   const paraDados = useCallback(
@@ -160,8 +185,10 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
       descricao={
         <>
           Arraste a alça azul (move a reta, muda <em>β₀</em>) e a alça vazada
-          (gira em torno de <em>x̄</em>, muda <em>β₁</em>). Os traços laranja são
-          os resíduos: quanto mais escuros, mais pesam em{' '}
+          (gira em torno de <em>x̄</em>, muda <em>β₁</em>). O intercepto é onde a
+          reta cruza a vertical <em>x = 0</em> — o ponto cheio marca <em>β₀ᶜ</em>{' '}
+          e o vazado, o <em>β₀</em> verdadeiro. Os traços laranja são os
+          resíduos: quanto mais escuros, mais pesam em{' '}
           <em>SQRes = Σ(yᵢ − β₀ − β₁xᵢ)²</em>.
         </>
       }
@@ -250,6 +277,27 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
           y
         </text>
 
+        {/* eixo y de verdade: a reta x = 0, onde se lê o intercepto */}
+        {zeroVisivel && (
+          <>
+            <line
+              x1={ex(0)}
+              x2={ex(0)}
+              y1={M.top}
+              y2={H - M.bottom}
+              className="stroke-slate-400"
+              strokeWidth={1.5}
+            />
+            <text
+              x={ex(0) + 5}
+              y={M.top + 12}
+              className="fill-slate-400 text-[10px]"
+            >
+              x = 0
+            </text>
+          </>
+        )}
+
         <g clipPath="url(#areaA)">
           {residuos}
           {pontos}
@@ -269,6 +317,35 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
 
           {/* reta candidata */}
           <line {...rCand} stroke="#0284c7" strokeWidth={3} />
+
+          {/* interceptos: onde cada reta cruza x = 0 */}
+          {zeroVisivel && (
+            <>
+              <circle
+                cx={ex(0)}
+                cy={ey(p.beta0)}
+                r={4}
+                fill="none"
+                stroke="#64748b"
+                strokeWidth={1.5}
+              />
+              <circle
+                cx={ex(0)}
+                cy={ey(b0)}
+                r={4.5}
+                fill="#0284c7"
+                stroke="#fff"
+                strokeWidth={1.5}
+              />
+              <text
+                x={ex(0) + 8}
+                y={ey(b0) - 8}
+                className="fill-sky-700 text-[11px] font-medium"
+              >
+                β₀ᶜ = {num(b0, 2)}
+              </text>
+            </>
+          )}
         </g>
 
         {/* alças */}
@@ -362,6 +439,15 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
         <li>
           <span className="mr-1 inline-block h-0.5 w-6 align-middle bg-orange-500" />
           resíduos
+        </li>
+        <li>
+          <button
+            type="button"
+            onClick={() => setDominioY(comFolga(necessarioY))}
+            className="rounded border border-slate-300 px-2 py-0.5 text-slate-600 hover:bg-slate-100"
+          >
+            Reajustar eixos
+          </button>
         </li>
       </ul>
     </Panel>
