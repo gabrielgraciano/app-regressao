@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { emvReducer, ESTADO_INICIAL } from './useEmvState'
+import { act, renderHook } from '@testing-library/react'
+import { emvReducer, ESTADO_INICIAL, useEmvState } from './useEmvState'
 
 describe('emvReducer', () => {
   it('altera um parâmetro sem tocar no resto do estado', () => {
@@ -54,5 +55,49 @@ describe('emvReducer', () => {
     expect(desafio.modoDesafio).toBe(true)
     expect(desafio.revelado).toBe(false)
     expect(emvReducer(desafio, { tipo: 'revelar' }).revelado).toBe(true)
+  })
+})
+
+describe('useEmvState', () => {
+  it('mover o candidato não recalcula o que depende só da amostra', () => {
+    const { result } = renderHook(() => useEmvState())
+    const somas = result.current.derivado.somas
+    const emv = result.current.derivado.emv
+    const info = result.current.derivado.info
+    const elipse = result.current.derivado.elipse
+
+    act(() => {
+      result.current.dispatch({ tipo: 'candidato', reta: { b0: 7, b1: -3 } })
+    })
+
+    // identidade preservada: o painel B não redesenha o heatmap ao arrastar
+    expect(result.current.derivado.somas).toBe(somas)
+    expect(result.current.derivado.emv).toBe(emv)
+    expect(result.current.derivado.info).toBe(info)
+    expect(result.current.derivado.elipse).toBe(elipse)
+    // mas o que depende do candidato mudou
+    expect(result.current.derivado.gap).toBeGreaterThan(0)
+  })
+
+  it('nova amostra recalcula tudo', () => {
+    const { result } = renderHook(() => useEmvState())
+    const somas = result.current.derivado.somas
+    act(() => {
+      result.current.dispatch({ tipo: 'novaAmostra' })
+    })
+    expect(result.current.derivado.somas).not.toBe(somas)
+  })
+
+  it('o gap é zero quando o candidato está no EMV', () => {
+    const { result } = renderHook(() => useEmvState())
+    const { b0, b1 } = result.current.derivado.emv
+    act(() => {
+      result.current.dispatch({ tipo: 'candidato', reta: { b0, b1 } })
+    })
+    expect(Math.abs(result.current.derivado.gap)).toBeLessThan(1e-9)
+    expect(result.current.derivado.sigma2CandMle).toBeCloseTo(
+      result.current.derivado.sigma2Emv,
+      12,
+    )
   })
 })

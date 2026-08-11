@@ -117,14 +117,44 @@ export function useEmvState() {
 
   const amostra = useMemo(() => simulate(estado.params), [estado.params])
 
-  const derivado = useMemo<EmvDerivado>(() => {
+  /**
+   * Tudo o que depende só da amostra fica num memo separado: assim os objetos
+   * (somas, EMV, informação de Fisher, elipse) mantêm a identidade enquanto o
+   * aluno arrasta a reta, e o painel B não recalcula o heatmap a cada quadro.
+   */
+  const daAmostra = useMemo(() => {
     const somas = sums(amostra)
-    const emv = ols(amostra)
-    const sqResEmv = rss(amostra, emv.beta0, emv.beta1)
-    const sigma2Emv = sigma2Mle(amostra, emv.beta0, emv.beta1)
-    const s2 = s2Unbiased(amostra, emv.beta0, emv.beta1)
-    const logLikEmv = logLik(amostra, emv.beta0, emv.beta1, sigma2Emv)
+    const emvOls = ols(amostra)
+    const emv = { b0: emvOls.beta0, b1: emvOls.beta1 }
+    const sqResEmv = rss(amostra, emv.b0, emv.b1)
+    const sigma2Emv = sigma2Mle(amostra, emv.b0, emv.b1)
+    const s2 = s2Unbiased(amostra, emv.b0, emv.b1)
+    const logLikEmv = logLik(amostra, emv.b0, emv.b1, sigma2Emv)
 
+    const info = fisherInfo(amostra, sigma2Emv)
+    const infoInv = invert3x3(info)
+    const se = standardErrors(infoInv)
+    const elipse = confidenceEllipse(
+      block2x2(infoInv),
+      [emv.b0, emv.b1],
+      0.95,
+      96,
+    )
+    return {
+      somas,
+      emv,
+      sqResEmv,
+      sigma2Emv,
+      s2,
+      logLikEmv,
+      info,
+      infoInv,
+      se,
+      elipse,
+    }
+  }, [amostra])
+
+  const derivado = useMemo<EmvDerivado>(() => {
     const { b0, b1 } = estado.candidato
     const sqResCand = rss(amostra, b0, b1)
     const sigma2CandMle = sigma2Mle(amostra, b0, b1)
@@ -135,36 +165,17 @@ export function useEmvState() {
         : Math.max(sigma2CandMle, 1e-12)
     const logLikCand = logLik(amostra, b0, b1, sigma2Ativo)
 
-    const info = fisherInfo(amostra, sigma2Emv)
-    const infoInv = invert3x3(info)
-    const se = standardErrors(infoInv)
-    const elipse = confidenceEllipse(
-      block2x2(infoInv),
-      [emv.beta0, emv.beta1],
-      0.95,
-      96,
-    )
-
     return {
       amostra,
-      somas,
-      emv: { b0: emv.beta0, b1: emv.beta1 },
-      sqResEmv,
-      sigma2Emv,
-      s2,
-      logLikEmv,
+      ...daAmostra,
       sqResCand,
       sigma2CandMle,
       s2Cand,
       sigma2Ativo,
       logLikCand,
-      gap: logLikEmv - logLikCand,
-      info,
-      infoInv,
-      se,
-      elipse,
+      gap: daAmostra.logLikEmv - logLikCand,
     }
-  }, [amostra, estado.candidato, estado.sigma2Manual])
+  }, [amostra, daAmostra, estado.candidato, estado.sigma2Manual])
 
   return { estado, dispatch, derivado }
 }
