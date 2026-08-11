@@ -40,7 +40,8 @@ Outros comandos:
 
 O deploy é automático: todo push na branch `main` dispara
 `.github/workflows/deploy.yml`, que roda `typecheck`, testes e build e publica o
-`dist/` no GitHub Pages.
+`dist/` no GitHub Pages. Há também `.github/workflows/ci.yml`, que roda a mesma
+verificação em Pull Requests e em pushes das branches `claude/**`.
 
 Passo manual, que **só o dono do repositório pode fazer** (uma única vez):
 

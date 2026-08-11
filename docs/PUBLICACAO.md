@@ -3,9 +3,11 @@
 Guia para o **dono do repositório**. Os passos 1 a 3 são cliques no GitHub que
 só você pode dar; o passo 4 em diante é o que acontece sozinho depois.
 
-Estado atual (11/08/2026): o repositório está **privado** e a branch padrão é
-`claude/regression-simulation-app-pjeurb` (foi a primeira empurrada num repo
-vazio, então virou padrão automaticamente). Não existe `main`.
+Estado atual (11/08/2026, atualizado): o repositório já está **público**, a
+branch **`main` existe e é a padrão**, e **Settings → Pages → Source já está em
+GitHub Actions**. Ou seja, os passos 1 a 3 abaixo **já foram feitos** — ficam
+registrados como referência e para o caso de precisar conferir. O que falta é o
+passo 4: integrar a branch de trabalho na `main` para o deploy rodar.
 
 ---
 
