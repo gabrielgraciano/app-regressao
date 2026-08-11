@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+e2e/telas/
+e2e/.saida/
+playwright-report/

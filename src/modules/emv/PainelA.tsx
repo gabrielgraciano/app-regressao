@@ -144,6 +144,7 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
       amostra.x.map((xi, i) => (
         <circle
           key={i}
+          data-teste="ponto"
           cx={ex(xi)}
           cy={ey(amostra.y[i])}
           r={amostra.x.length > 200 ? 2 : 3}
@@ -281,6 +282,7 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
         {zeroVisivel && (
           <>
             <line
+              data-teste="eixo-x0"
               x1={ex(0)}
               x2={ex(0)}
               y1={M.top}
@@ -330,6 +332,7 @@ export function PainelA({ estado, dispatch, derivado, escondeEmv }: Props) {
                 strokeWidth={1.5}
               />
               <circle
+                data-teste="intercepto-candidato"
                 cx={ex(0)}
                 cy={ey(b0)}
                 r={4.5}

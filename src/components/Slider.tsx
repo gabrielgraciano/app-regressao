@@ -51,6 +51,7 @@ export function Slider({
       </div>
       <input
         id={id}
+        data-teste={rotulo}
         type="range"
         min={min}
         max={max}
