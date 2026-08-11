@@ -31,6 +31,11 @@ jobs:
       - run: npm test
       - run: npm run build
 
+      # Barreira antes de publicar: um erro de `base` ou um painel que deixou
+      # de desenhar não passa daqui.
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

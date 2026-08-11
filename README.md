@@ -24,6 +24,19 @@ Outros comandos:
 | `npm run preview`   | serve o `dist/` localmente               |
 | `npm run typecheck` | checagem de tipos (`tsc -b --noEmit`)    |
 | `npm test`          | testes das fórmulas (`vitest run`)       |
+| `npm run test:e2e`  | testes de navegador (`playwright test`)  |
+
+Os testes de navegador rodam contra o build servido pelo `preview`, no mesmo
+caminho do GitHub Pages — um erro de `base` também é pego ali. Eles gravam
+capturas da página em `e2e/telas/`, que no CI sobem como artefato do PR: dá para
+ver a página de uma alteração sem publicar nada.
+
+Em ambientes que já trazem um Chromium instalado, aponte para ele em vez de
+baixar outro:
+
+```bash
+CHROMIUM_BIN=/caminho/para/chrome npm run test:e2e
+```
 
 ## Estrutura
 

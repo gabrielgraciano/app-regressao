@@ -77,6 +77,7 @@ persistência, i18n. Ver roadmap.
 | Matemática | código próprio em `src/lib/` | forma fechada; nada de dependência numérica pesada |
 | Aleatoriedade | PRNG com semente (`mulberry32`) + Box–Muller | **reprodutibilidade em aula**: "todos digitem semente 42" |
 | Testes | **Vitest** para `src/lib/` | as fórmulas precisam de rede de segurança |
+| Testes de tela | **Playwright** em `e2e/` | o que se vê não tem como ser testado por unidade: o eixo que deslizava passou por dezenas de testes verdes |
 | Idioma da UI | **Português** | público-alvo é a turma |
 | Deploy | **GitHub Pages via GitHub Actions** | repo já está no GitHub, custo zero, URL estável |
 
@@ -143,8 +144,10 @@ trabalho, e o ferramental (resíduos, alavancagem) já é reaproveitável.
 - Interação a 60fps com `n = 500` (heatmap recalculado com `requestAnimationFrame`
   e memoizado por `(n, semente, params)`).
 - Funciona em celular (a turma vai abrir no celular na aula).
-- `npm run typecheck` e `npm test` verdes.
+- `npm run typecheck`, `npm test` e `npm run test:e2e` verdes.
 - Nenhum número na tela sem rótulo e sem símbolo correspondente à fórmula.
+- Todo defeito visual corrigido deixa para trás um teste de navegador que o
+  reproduz — é a única rede que pega esse tipo de erro.
 
 ## 7. Riscos e cuidados
 

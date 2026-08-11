@@ -24,3 +24,34 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  navegador:
+    name: Testes de navegador
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - run: npm run test:e2e
+
+      # As capturas são o ponto: dá para ver a página do PR sem publicar nada.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas-da-tela
+          path: e2e/telas/
+          retention-days: 14
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: relatorio-playwright
+          path: playwright-report/
+          retention-days: 14
