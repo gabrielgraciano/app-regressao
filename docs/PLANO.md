@@ -110,21 +110,33 @@ todos os assets em produção).
 Regra dura: **`src/lib` não importa React nem nada de DOM.** É o que permite
 testar a matemática e reaproveitá-la nos próximos módulos.
 
-## 5. Roadmap
+## 5. Roadmap — alinhado ao programa de MAE0350
 
-- **M1 — EMV na regressão simples** (v1, descrito acima).
-- **M2 — Inferência**: distribuição amostral de β̂ por simulação repetida
-  (Monte Carlo), histograma vs normal assintótica, cobertura empírica de IC,
-  teste `H₀: β₁ = 0`.
-- **M3 — Diagnóstico**: resíduos vs ajustados, QQ-plot, alavancagem, pontos
-  influentes (o aluno arrasta um ponto e vê a reta girar).
-- **M4 — Violações dos pressupostos**: heterocedasticidade, não-linearidade,
-  erro não-normal — o que quebra e o que sobrevive.
-- **M5 — Regressão múltipla**: matriz `X`, `β̂ = (XᵀX)⁻¹Xᵀy`, colinearidade.
-- **M6 — Dados reais**: colar CSV e rodar o mesmo ferramental.
+Disciplina: **MAE0350 — Análise de Regressão** (IME-USP), Prof. Alexandre Galvão
+Patriota. 4 créditos-aula + 1 crédito-trabalho, 90h. Bibliografia principal:
+Montgomery, Peck & Vining (2021); Draper & Smith (2014); Weisberg (2013).
 
-Cada módulo é uma pasta em `src/modules/` e uma aba na navegação. A `lib`
-cresce por acumulação, nunca por reescrita.
+Cada módulo é uma pasta em `src/modules/` e uma aba na navegação, **numerada
+como o programa da disciplina** — assim o aluno acha a tela pelo tópico da aula.
+A `lib` cresce por acumulação, nunca por reescrita.
+
+| Módulo | Tópico do programa | O que a tela faz |
+|---|---|---|
+| **M1** | 1. Regressão Linear Simples | EMV interativo (v1, §2): ℓ(θ), β̂, σ̂², informação de Fisher, erros-padrão |
+| **M1b** | 1. (inferência) | distribuição amostral de β̂ por Monte Carlo, cobertura empírica de IC, teste `H₀: β₁ = 0` |
+| **M2** | 2. Regressão Linear Múltipla | matriz `X`, `β̂ = (XᵀX)⁻¹Xᵀy`, projeção/chapéu `H`, tabela ANOVA (2.5) |
+| **M2b** | 2.2–2.4 | regressão polinomial, variáveis binárias (mudança de intercepto vs de inclinação) e segmentada com nó arrastável |
+| **M3** | 3. Métodos de Diagnóstico | resíduos vs ajustados, QQ-plot, alavancagem `hᵢᵢ`, DFFITS/DFBETAS, distância de Cook; **envelopes simulados** (3.3) e ponto arrastável que gira a reta |
+| **M4** | 4. Seleção de Variáveis | todas as regressões possíveis num painel de `Cp`/`AIC`/`R²aj`, métodos sequenciais passo a passo, custo da seleção pós-hoc |
+| **M5** | 5. Transformação de Variáveis | família Box–Cox com λ deslizante, efeito simultâneo em ajuste e resíduos |
+| **M6** | 6. Multicolinearidade | correlação entre preditores controlável, VIF, **ridge** com traço de `λ`, componentes principais |
+| **M7** | 7. Regressão Heterocedástica | σ² função de `x`, MQ ponderados vs ordinários, modelagem dupla (média e dispersão) |
+| **M8** | 8. Tópicos Especiais | bootstrap vs assintótico lado a lado, regressão robusta sob outliers, ajuste aditivo/suavização |
+| **M9** | — | colar CSV e rodar o ferramental dos módulos anteriores em dados reais |
+
+Ordem sugerida de construção: **M1 → M3 → M2 → M1b → M6 → M7 → M5 → M4 → M8**.
+M3 vem cedo porque diagnóstico é onde a visualização rende mais por hora de
+trabalho, e o ferramental (resíduos, alavancagem) já é reaproveitável.
 
 ## 6. Critérios de qualidade
 
@@ -141,6 +153,6 @@ cresce por acumulação, nunca por reescrita.
    justamente um ponto onde a turma tropeça.
 3. **Escala de ℓ**: a log-verossimilhança fica muito negativa; o heatmap deve
    plotar `ℓ − ℓ_máx` (deviance) para ter contraste.
-4. **Ementa da disciplina não verificada**: a página do JupiterWeb está
-   bloqueada neste ambiente. O roadmap foi inferido da foto da lousa (matriz de
-   informação de Fisher) — confirmar com a ementa oficial antes do M4/M5.
+4. **Escopo do roadmap**: o §5 cobre o programa inteiro da disciplina. Não é
+   um compromisso de construir tudo — é o mapa para que cada módulo novo caiba
+   sem reescrever a `lib`. A v1 é só o M1.
