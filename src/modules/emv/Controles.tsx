@@ -9,7 +9,7 @@ type Props = {
 }
 
 const botao =
-  'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100'
+  'rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 active:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40'
 
 /** Painel lateral: parâmetros da simulação e ações. */
 export function Controles({ estado, dispatch, derivado }: Props) {
@@ -124,6 +124,12 @@ export function Controles({ estado, dispatch, derivado }: Props) {
         <button
           type="button"
           className={botao}
+          disabled={estado.modoDesafio && !estado.revelado}
+          title={
+            estado.modoDesafio && !estado.revelado
+              ? 'No modo desafio, o atalho fica bloqueado até revelar a solução.'
+              : undefined
+          }
           onClick={() =>
             dispatch({
               tipo: 'candidato',
