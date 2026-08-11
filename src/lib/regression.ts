@@ -12,6 +12,7 @@ export type Sums = {
   sx: number
   sy: number
   sxx: number
+  syy: number
   sxy: number
   xbar: number
   ybar: number
@@ -27,11 +28,13 @@ export function sums(s: Sample): Sums {
   let sx = 0
   let sy = 0
   let sxx = 0
+  let syy = 0
   let sxy = 0
   for (let i = 0; i < n; i++) {
     sx += s.x[i]
     sy += s.y[i]
     sxx += s.x[i] * s.x[i]
+    syy += s.y[i] * s.y[i]
     sxy += s.x[i] * s.y[i]
   }
   const xbar = n > 0 ? sx / n : 0
@@ -41,6 +44,7 @@ export function sums(s: Sample): Sums {
     sx,
     sy,
     sxx,
+    syy,
     sxy,
     xbar,
     ybar,
@@ -78,6 +82,26 @@ export function rss(s: Sample, b0: number, b1: number): number {
     acc += e * e
   }
   return acc
+}
+
+/**
+ * SQRes calculado só com as somas suficientes, em tempo constante:
+ *
+ *   SQRes = Σy² − 2b₀Σy − 2b₁Σxy + n·b₀² + 2b₀b₁Σx + b₁²Σx²
+ *
+ * É o que permite varrer uma grade de 120×120 retas candidatas no painel B
+ * sem percorrer a amostra inteira em cada ponto.
+ */
+export function rssFromSums(m: Sums, b0: number, b1: number): number {
+  return Math.max(
+    0,
+    m.syy -
+      2 * b0 * m.sy -
+      2 * b1 * m.sxy +
+      m.n * b0 * b0 +
+      2 * b0 * b1 * m.sx +
+      b1 * b1 * m.sxx,
+  )
 }
 
 /**

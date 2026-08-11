@@ -4,6 +4,7 @@ import {
   ols,
   profileLogLik,
   rss,
+  rssFromSums,
   s2Unbiased,
   sigma2Mle,
   sums,
@@ -34,6 +35,27 @@ describe('ols', () => {
     expect(beta0).toBeCloseTo(3, 12)
     expect(beta1).toBeCloseTo(2, 12)
     expect(rss(s, beta0, beta1)).toBeCloseTo(0, 12)
+  })
+})
+
+describe('rssFromSums', () => {
+  it('coincide com o SQRes calculado ponto a ponto', () => {
+    const s = simulate({
+      n: 60,
+      beta0: 3,
+      beta1: -2,
+      sigma: 1.7,
+      xMin: -5,
+      xMax: 5,
+      seed: 5,
+    })
+    const m = sums(s)
+    const rand = mulberry32(3)
+    for (let k = 0; k < 30; k++) {
+      const b0 = (rand() - 0.5) * 20
+      const b1 = (rand() - 0.5) * 10
+      expect(rssFromSums(m, b0, b1)).toBeCloseTo(rss(s, b0, b1), 6)
+    }
   })
 })
 
@@ -96,6 +118,45 @@ describe('logLik', () => {
       logLik(s, b0, b1, sigma2Mle(s, b0, b1)),
       10,
     )
+  })
+})
+
+describe('superfície de deviance do painel B', () => {
+  it('o máximo da grade coincide com o EMV analítico', () => {
+    const s = simulate({
+      n: 45,
+      beta0: 2,
+      beta1: 1.5,
+      sigma: 2,
+      xMin: 0,
+      xMax: 10,
+      seed: 42,
+    })
+    const m = sums(s)
+    const emv = ols(s)
+    // janela β̂ ± 4·EP, como no painel B
+    const sigma2 = sigma2Mle(s, emv.beta0, emv.beta1)
+    const ep1 = Math.sqrt(sigma2 / m.Sxx)
+    const ep0 = Math.sqrt(sigma2 * (1 / m.n + (m.xbar * m.xbar) / m.Sxx))
+    const G = 120
+    let melhorB0 = 0
+    let melhorB1 = 0
+    let melhor = -Infinity
+    for (let j = 0; j < G; j++) {
+      const b1 = emv.beta1 - 4 * ep1 + (8 * ep1 * j) / (G - 1)
+      for (let i = 0; i < G; i++) {
+        const b0 = emv.beta0 - 4 * ep0 + (8 * ep0 * i) / (G - 1)
+        const dev = -(m.n / 2) * Math.log(rssFromSums(m, b0, b1))
+        if (dev > melhor) {
+          melhor = dev
+          melhorB0 = b0
+          melhorB1 = b1
+        }
+      }
+    }
+    // dentro de meia célula da grade
+    expect(Math.abs(melhorB0 - emv.beta0)).toBeLessThan((8 * ep0) / (G - 1))
+    expect(Math.abs(melhorB1 - emv.beta1)).toBeLessThan((8 * ep1) / (G - 1))
   })
 })
 
