@@ -1,28 +1,58 @@
-# app-regressao
+# App de Simulação e Aprendizado de Regressão
 
-Aplicativo web de **simulação e aprendizado de regressão** — material de apoio
-para a disciplina **MAE0350 (Análise de Regressão)**, IME-USP, e para colegas.
+Site estático (sem backend) para **simular e entender regressão linear simples**:
+o aluno mexe nos parâmetros, arrasta a reta candidata e vê a log-verossimilhança,
+os estimadores de máxima verossimilhança (EMV), a informação de Fisher e os
+erros-padrão mudarem em tempo real.
 
-O primeiro módulo é uma visualização interativa do **estimador de máxima
-verossimilhança (EMV)** na regressão linear simples: você simula os dados,
-arrasta uma reta candidata e vê ao vivo a log-verossimilhança, o EMV analítico,
-a matriz de informação de Fisher e os erros-padrão assintóticos.
+Material de estudo da disciplina **MAE0350 — Análise de Regressão** (IME-USP).
 
-## Estado
+**Site publicado:** https://gabrielgraciano.github.io/app-regressao/
 
-Em construção. Nesta fase o repositório contém apenas a especificação:
+## Como rodar localmente
 
-- [`docs/PLANO.md`](docs/PLANO.md) — arquitetura, decisões técnicas e roadmap
-  alinhado ao programa da disciplina.
-- [`docs/AGENTE-OPERACIONAL.md`](docs/AGENTE-OPERACIONAL.md) — tarefas da Sprint 1.
-- [`docs/PUBLICACAO.md`](docs/PUBLICACAO.md) — passo a passo para pôr o site no ar.
+```bash
+npm i
+npm run dev
+```
+
+Outros comandos:
+
+| Comando             | O que faz                                |
+| ------------------- | ---------------------------------------- |
+| `npm run build`     | gera o site estático em `dist/`          |
+| `npm run preview`   | serve o `dist/` localmente               |
+| `npm run typecheck` | checagem de tipos (`tsc -b --noEmit`)    |
+| `npm test`          | testes das fórmulas (`vitest run`)       |
+
+## Estrutura
+
+- `src/lib/` — **matemática pura** (sem React, sem DOM): PRNG com semente,
+  simulação, mínimos quadrados / EMV, informação de Fisher, elipse de confiança.
+- `src/components/` — componentes reutilizáveis (`Slider`, `Panel`, `Formula`,
+  `Readout`).
+- `src/modules/emv/` — o módulo M1: painéis A (dispersão), B (superfície de ℓ)
+  e C (perfil em σ²).
+- `docs/` — [plano de engenharia](docs/PLANO.md), [tarefas](docs/AGENTE-OPERACIONAL.md)
+  e [guia de publicação](docs/PUBLICACAO.md).
 
 ## Publicação
 
-O app será publicado como site estático em
-`https://gabrielgraciano.github.io/app-regressao/` via GitHub Pages.
+O deploy é automático: todo push na branch `main` dispara
+`.github/workflows/deploy.yml`, que roda `typecheck`, testes e build e publica o
+`dist/` no GitHub Pages.
 
-Três passos manuais do dono do repositório, detalhados em
-[`docs/PUBLICACAO.md`](docs/PUBLICACAO.md): tornar o repositório público, criar
-a branch `main` como padrão e apontar **Settings → Pages → Source** para
-**GitHub Actions**.
+Passo manual, que **só o dono do repositório pode fazer** (uma única vez):
+
+> Em **Settings → Pages → Build and deployment → Source**, selecionar
+> **GitHub Actions**. Sem isso o deploy falha com "Pages não habilitado"
+> (_"Get Pages site failed" / "Not Found"_).
+
+O repositório também precisa ser **público** (GitHub Pages em repositório
+privado exige plano pago).
+
+Detalhes e solução de problemas: [`docs/PUBLICACAO.md`](docs/PUBLICACAO.md).
+
+> Atenção: o `base` do Vite é `'/app-regressao/'` (em `vite.config.ts`). Se o
+> repositório for renomeado ou o site for para outro domínio, esse valor precisa
+> mudar — senão a página publicada fica em branco.
