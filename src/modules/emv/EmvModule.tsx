@@ -1,6 +1,7 @@
 import { Panel } from '../../components/Panel'
 import { Readout } from '../../components/Readout'
 import { Controles } from './Controles'
+import { PainelA } from './PainelA'
 import { useEmvState } from './useEmvState'
 
 /** Módulo M1 — EMV na regressão linear simples. */
@@ -15,6 +16,12 @@ export function EmvModule() {
       </div>
 
       <div className="flex flex-col gap-4">
+        <PainelA
+          estado={estado}
+          dispatch={dispatch}
+          derivado={derivado}
+          escondeEmv={escondeEmv}
+        />
         <Panel
           titulo="Números"
           descricao="Cada valor traz o símbolo da fórmula correspondente."
