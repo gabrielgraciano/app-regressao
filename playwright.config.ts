@@ -41,7 +41,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run preview -- --port ${PORTA} --strictPort`,
+    // `--host 127.0.0.1` é necessário: sem ele o preview escuta em `localhost`,
+    // que em runners de CI resolve para ::1, e a espera em 127.0.0.1 nunca
+    // encontra o servidor — o teste falha por timeout sem nenhuma pista.
+    command: `npm run preview -- --port ${PORTA} --strictPort --host 127.0.0.1`,
     url: BASE,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
